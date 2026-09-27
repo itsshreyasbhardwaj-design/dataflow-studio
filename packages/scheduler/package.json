@@ -1,0 +1,27 @@
+{
+  "name": "@dataflow-studio/scheduler",
+  "version": "0.1.0",
+  "description": "Cron / interval scheduling and backfill planning",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dataflow-studio/workflow-engine": "workspace:*",
+    "@dataflow-studio/database": "workspace:*",
+    "@dataflow-studio/observability": "workspace:*"
+  }
+}

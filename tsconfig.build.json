@@ -1,0 +1,53 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/observability"
+    },
+    {
+      "path": "./packages/schema-registry"
+    },
+    {
+      "path": "./packages/secrets"
+    },
+    {
+      "path": "./packages/workflow-engine"
+    },
+    {
+      "path": "./packages/transformations"
+    },
+    {
+      "path": "./packages/data-quality"
+    },
+    {
+      "path": "./packages/connectors"
+    },
+    {
+      "path": "./packages/lineage"
+    },
+    {
+      "path": "./packages/database"
+    },
+    {
+      "path": "./packages/execution-engine"
+    },
+    {
+      "path": "./packages/scheduler"
+    },
+    {
+      "path": "./packages/api-client"
+    },
+    {
+      "path": "./packages/sdk"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/worker"
+    },
+    {
+      "path": "./apps/cli"
+    }
+  ]
+}

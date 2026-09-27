@@ -1,0 +1,42 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "../workflow-engine"
+    },
+    {
+      "path": "../connectors"
+    },
+    {
+      "path": "../transformations"
+    },
+    {
+      "path": "../data-quality"
+    },
+    {
+      "path": "../database"
+    },
+    {
+      "path": "../secrets"
+    },
+    {
+      "path": "../observability"
+    },
+    {
+      "path": "../schema-registry"
+    },
+    {
+      "path": "../lineage"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "dataflow-studio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open-source control plane for data workflows: visual DAG design, durable execution, data quality, lineage and observability.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.17.0",
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/*\" run build && pnpm --filter @dataflow-studio/cli run build && pnpm --filter @dataflow-studio/worker run build && pnpm --filter @dataflow-studio/web run build",
+    "build:packages": "pnpm -r --filter \"./packages/*\" run build",
+    "typecheck": "tsc -b tsconfig.build.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "dev": "pnpm --filter @dataflow-studio/web run dev",
+    "worker": "pnpm --filter @dataflow-studio/worker run dev",
+    "seed": "node --experimental-strip-types scripts/seed.ts",
+    "clean": "rm -rf node_modules packages/*/dist apps/*/dist apps/web/.next && pnpm store prune || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.20.0",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^3.2.4"
+  }
+}

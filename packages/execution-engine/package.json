@@ -1,0 +1,33 @@
+{
+  "name": "@dataflow-studio/execution-engine",
+  "version": "0.1.0",
+  "description": "Durable DAG executor: task scheduling, retries, cancellation, recovery",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dataflow-studio/workflow-engine": "workspace:*",
+    "@dataflow-studio/connectors": "workspace:*",
+    "@dataflow-studio/transformations": "workspace:*",
+    "@dataflow-studio/data-quality": "workspace:*",
+    "@dataflow-studio/database": "workspace:*",
+    "@dataflow-studio/secrets": "workspace:*",
+    "@dataflow-studio/observability": "workspace:*",
+    "@dataflow-studio/schema-registry": "workspace:*",
+    "@dataflow-studio/lineage": "workspace:*"
+  }
+}
