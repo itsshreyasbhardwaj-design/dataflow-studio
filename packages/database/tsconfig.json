@@ -16,6 +16,12 @@
     },
     {
       "path": "../observability"
+    },
+    {
+      "path": "../schema-registry"
+    },
+    {
+      "path": "../secrets"
     }
   ]
 }

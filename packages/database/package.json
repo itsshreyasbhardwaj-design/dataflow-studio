@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@dataflow-studio/workflow-engine": "workspace:*",
-    "@dataflow-studio/observability": "workspace:*"
+    "@dataflow-studio/observability": "workspace:*",
+    "@dataflow-studio/schema-registry": "workspace:*",
+    "@dataflow-studio/secrets": "workspace:*"
   }
 }

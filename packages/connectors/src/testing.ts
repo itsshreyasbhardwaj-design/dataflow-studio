@@ -46,7 +46,8 @@ export class MemorySqlDriver implements SqlDriver {
   }
 
   async close(): Promise<void> {
-    this.tables.clear();
+    // The caller owns this driver's data (tests assert on it after a run), and it
+    // holds no sockets or file handles, so closing is a no-op.
   }
 
   rowsIn(table: string): Row[] {

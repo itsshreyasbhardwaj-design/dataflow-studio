@@ -71,6 +71,12 @@ importers:
       '@dataflow-studio/observability':
         specifier: workspace:*
         version: link:../observability
+      '@dataflow-studio/schema-registry':
+        specifier: workspace:*
+        version: link:../schema-registry
+      '@dataflow-studio/secrets':
+        specifier: workspace:*
+        version: link:../secrets
       '@dataflow-studio/workflow-engine':
         specifier: workspace:*
         version: link:../workflow-engine

@@ -289,7 +289,7 @@ export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
           type: "sql.transform",
           config: {
             query:
-              "SELECT customer_id, region, COUNT(*) AS order_count, SUM(amount) AS revenue\nFROM input\nGROUP BY customer_id, region\nORDER BY revenue DESC",
+              "SELECT customer_id,\n       COUNT(*) AS order_count,\n       COUNT(DISTINCT region) AS regions,\n       ROUND(SUM(amount), 2) AS revenue\nFROM input\nGROUP BY customer_id\nORDER BY revenue DESC",
             dataset: "demo_customer_revenue",
           },
           metadata: { ...at(520, 0), label: "Revenue by customer" },
@@ -303,7 +303,7 @@ export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
               { id: "customer_id_not_null", type: "not_null", column: "customer_id" },
               { id: "customer_id_unique", type: "unique", column: "customer_id" },
               { id: "revenue_non_negative", type: "range", column: "revenue", min: 0 },
-              { id: "region_allowed", type: "accepted_values", column: "region", values: ["north", "south", "east", "west"] },
+              { id: "order_count_positive", type: "range", column: "order_count", min: 1 },
               { id: "has_rows", type: "row_count", min: 1 },
             ],
             onFailure: "warn",
