@@ -30,6 +30,75 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.4)(supports-color@7.2.0)
 
+  apps/api:
+    dependencies:
+      '@dataflow-studio/connectors':
+        specifier: workspace:*
+        version: link:../../packages/connectors
+      '@dataflow-studio/data-quality':
+        specifier: workspace:*
+        version: link:../../packages/data-quality
+      '@dataflow-studio/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@dataflow-studio/execution-engine':
+        specifier: workspace:*
+        version: link:../../packages/execution-engine
+      '@dataflow-studio/lineage':
+        specifier: workspace:*
+        version: link:../../packages/lineage
+      '@dataflow-studio/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@dataflow-studio/scheduler':
+        specifier: workspace:*
+        version: link:../../packages/scheduler
+      '@dataflow-studio/schema-registry':
+        specifier: workspace:*
+        version: link:../../packages/schema-registry
+      '@dataflow-studio/secrets':
+        specifier: workspace:*
+        version: link:../../packages/secrets
+      '@dataflow-studio/transformations':
+        specifier: workspace:*
+        version: link:../../packages/transformations
+      '@dataflow-studio/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
+
+  apps/cli:
+    dependencies:
+      '@dataflow-studio/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@dataflow-studio/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
+
+  apps/worker:
+    dependencies:
+      '@dataflow-studio/connectors':
+        specifier: workspace:*
+        version: link:../../packages/connectors
+      '@dataflow-studio/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@dataflow-studio/execution-engine':
+        specifier: workspace:*
+        version: link:../../packages/execution-engine
+      '@dataflow-studio/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@dataflow-studio/scheduler':
+        specifier: workspace:*
+        version: link:../../packages/scheduler
+      '@dataflow-studio/secrets':
+        specifier: workspace:*
+        version: link:../../packages/secrets
+      '@dataflow-studio/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
+
   packages/api-client:
     dependencies:
       '@dataflow-studio/workflow-engine':

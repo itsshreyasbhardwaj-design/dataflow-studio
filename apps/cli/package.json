@@ -1,0 +1,20 @@
+{
+  "name": "@dataflow-studio/cli",
+  "version": "0.1.0",
+  "description": "dataflow - command line interface for DataFlow Studio",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "dataflow": "./dist/main.js" },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/main.js",
+    "dev": "node --experimental-strip-types src/main.ts",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dataflow-studio/sdk": "workspace:*",
+    "@dataflow-studio/workflow-engine": "workspace:*"
+  }
+}

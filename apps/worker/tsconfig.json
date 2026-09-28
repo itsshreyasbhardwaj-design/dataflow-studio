@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "outDir": "./dist", "rootDir": "./src" },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"],
+  "references": [
+    { "path": "../../packages/connectors" },
+    { "path": "../../packages/database" },
+    { "path": "../../packages/execution-engine" },
+    { "path": "../../packages/observability" },
+    { "path": "../../packages/scheduler" },
+    { "path": "../../packages/secrets" },
+    { "path": "../../packages/workflow-engine" }
+  ]
+}

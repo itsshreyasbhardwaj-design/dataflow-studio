@@ -1,0 +1,24 @@
+{
+  "name": "@dataflow-studio/worker",
+  "version": "0.1.0",
+  "description": "Task worker: claims and executes pipeline tasks, dispatches schedules and backfills",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --experimental-strip-types src/main.ts",
+    "start": "node dist/main.js",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dataflow-studio/connectors": "workspace:*",
+    "@dataflow-studio/database": "workspace:*",
+    "@dataflow-studio/execution-engine": "workspace:*",
+    "@dataflow-studio/observability": "workspace:*",
+    "@dataflow-studio/scheduler": "workspace:*",
+    "@dataflow-studio/secrets": "workspace:*",
+    "@dataflow-studio/workflow-engine": "workspace:*"
+  }
+}

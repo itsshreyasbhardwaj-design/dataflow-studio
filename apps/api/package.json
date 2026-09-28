@@ -1,0 +1,30 @@
+{
+  "name": "@dataflow-studio/api",
+  "version": "0.1.0",
+  "description": "REST API service layer: authentication, RBAC, rate limiting and business logic",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --experimental-strip-types src/server.ts",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dataflow-studio/connectors": "workspace:*",
+    "@dataflow-studio/data-quality": "workspace:*",
+    "@dataflow-studio/database": "workspace:*",
+    "@dataflow-studio/execution-engine": "workspace:*",
+    "@dataflow-studio/lineage": "workspace:*",
+    "@dataflow-studio/observability": "workspace:*",
+    "@dataflow-studio/scheduler": "workspace:*",
+    "@dataflow-studio/schema-registry": "workspace:*",
+    "@dataflow-studio/secrets": "workspace:*",
+    "@dataflow-studio/transformations": "workspace:*",
+    "@dataflow-studio/workflow-engine": "workspace:*"
+  }
+}

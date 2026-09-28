@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "outDir": "./dist", "rootDir": "./src" },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"],
+  "references": [
+    { "path": "../../packages/connectors" },
+    { "path": "../../packages/data-quality" },
+    { "path": "../../packages/database" },
+    { "path": "../../packages/execution-engine" },
+    { "path": "../../packages/lineage" },
+    { "path": "../../packages/observability" },
+    { "path": "../../packages/scheduler" },
+    { "path": "../../packages/schema-registry" },
+    { "path": "../../packages/secrets" },
+    { "path": "../../packages/transformations" },
+    { "path": "../../packages/workflow-engine" }
+  ]
+}

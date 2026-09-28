@@ -52,6 +52,9 @@ export function definitionHash(workflow: WorkflowDefinition): string {
 }
 
 export class WorkflowParseError extends Error {
+  /** Lets the API map a hostile definition to 422 rather than 500. */
+  readonly errorClass = "validation";
+
   constructor(message: string, readonly path?: string) {
     super(message);
     this.name = "WorkflowParseError";
