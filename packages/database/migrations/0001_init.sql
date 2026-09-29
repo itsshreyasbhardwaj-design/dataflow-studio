@@ -472,10 +472,11 @@ CREATE TABLE uploaded_files (
 CREATE INDEX uploaded_files_org_idx ON uploaded_files (organization_id, created_at DESC);
 
 -- --------------------------------------------------------------- metadata ---
-CREATE TABLE schema_migrations (
-  version    TEXT PRIMARY KEY,
-  applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- `schema_migrations` is deliberately NOT created here. The migration runner has
+-- to read it before it can decide whether this file has already been applied, so
+-- the runner creates it itself (CREATE TABLE IF NOT EXISTS) before the first
+-- migration runs. Declaring it again here would abort this file with 42P07 on
+-- every fresh database.
 
 -- Intermediate batches passed between tasks of one run. Kept small by the
 -- executor's byte cap: large results belong in a destination, not the control

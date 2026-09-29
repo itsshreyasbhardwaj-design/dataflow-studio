@@ -31,6 +31,14 @@ export interface SqlPool extends SqlClient {
   end(): Promise<void>;
 }
 
+/**
+ * Advisory-lock key that serialises {@link PostgresStore.migrate} across
+ * processes. Any stable 64-bit integer works; this one is arbitrary and only has
+ * to stay the same across releases so an old and a new process still exclude
+ * each other during a rolling deploy.
+ */
+const MIGRATION_LOCK_KEY = 8_426_197_315_004_211;
+
 // ---------------------------------------------------------------- mapping ---
 
 const snake = (key: string): string => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
@@ -121,22 +129,50 @@ export class PostgresStore implements Store {
     }
   }
 
+  /**
+   * Applies pending migrations, once, even when several processes start together.
+   *
+   * Workers scale independently of the web application, so a deploy routinely
+   * boots a dozen processes that all call this. Without a lock they read the same
+   * empty `schema_migrations`, all run `0001_init.sql`, and every loser dies with
+   * "relation already exists". A session-level advisory lock serialises them: the
+   * first process migrates while the rest wait, then each re-reads the table and
+   * finds nothing to do.
+   *
+   * The bookkeeping table is created here rather than in a migration file,
+   * because it has to exist before the runner can tell which migrations have
+   * already been applied.
+   */
   async migrate(): Promise<void> {
     const directory = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
-    await this.pool.query("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())");
-    const applied = new Set(
-      (await this.pool.query<{ version: string }>("SELECT version FROM schema_migrations")).rows.map((r) => r.version),
-    );
-    const files = (await readdir(directory)).filter((f) => f.endsWith(".sql")).sort();
-    for (const file of files) {
-      // The RLS migration is opt-in: it requires a non-superuser application role.
-      if (file.includes("row_level_security") && process.env["DATAFLOW_ENABLE_RLS"] !== "true") continue;
-      if (applied.has(file)) continue;
-      const sql = await readFile(join(directory, file), "utf8");
-      await this.transaction(async (client) => {
-        await client.query(sql);
-        await client.query("INSERT INTO schema_migrations (version) VALUES ($1)", [file]);
-      });
+    const client = await this.pool.connect();
+    try {
+      await client.query("SELECT pg_advisory_lock($1)", [MIGRATION_LOCK_KEY]);
+      await client.query("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())");
+      const applied = new Set(
+        (await client.query<{ version: string }>("SELECT version FROM schema_migrations")).rows.map((r) => r.version),
+      );
+      const files = (await readdir(directory)).filter((f) => f.endsWith(".sql")).sort();
+      for (const file of files) {
+        // The RLS migration is opt-in: it requires a non-superuser application role.
+        if (file.includes("row_level_security") && process.env["DATAFLOW_ENABLE_RLS"] !== "true") continue;
+        if (applied.has(file)) continue;
+        const sql = await readFile(join(directory, file), "utf8");
+        // One transaction per file, on the lock holder's own connection, so a
+        // failure half way through a migration leaves nothing behind.
+        try {
+          await client.query("BEGIN");
+          await client.query(sql);
+          await client.query("INSERT INTO schema_migrations (version) VALUES ($1)", [file]);
+          await client.query("COMMIT");
+        } catch (error) {
+          await client.query("ROLLBACK").catch(() => undefined);
+          throw translate(error);
+        }
+      }
+    } finally {
+      await client.query("SELECT pg_advisory_unlock($1)", [MIGRATION_LOCK_KEY]).catch(() => undefined);
+      client.release();
     }
   }
 

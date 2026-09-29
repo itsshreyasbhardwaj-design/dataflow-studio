@@ -1,3 +1,6 @@
+import { readFile, readdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { newId } from "@dataflow-studio/observability";
 import { MemoryStore } from "./memory-store.js";
@@ -528,3 +531,31 @@ for (const driver of drivers) {
     });
   });
 }
+
+/**
+ * These check the migration files themselves, so they run everywhere - including
+ * where no PostgreSQL server is available. The first one exists because
+ * `0001_init.sql` used to declare `schema_migrations`, which the runner has
+ * already created by the time the file executes: every fresh database aborted
+ * with 42P07 and the PostgreSQL path could not be brought up at all.
+ */
+describe("migration files", () => {
+  const directory = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
+
+  it("leave schema_migrations to the runner", async () => {
+    for (const file of (await readdir(directory)).filter((f) => f.endsWith(".sql"))) {
+      const sql = await readFile(join(directory, file), "utf8");
+      const statements = sql.replace(/--[^\n]*/g, "");
+      expect(statements, `${file} must not create schema_migrations`).not.toMatch(
+        /CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?schema_migrations/i,
+      );
+    }
+  });
+
+  it("are ordered by a numeric prefix so they apply deterministically", async () => {
+    const files = (await readdir(directory)).filter((f) => f.endsWith(".sql"));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) expect(file).toMatch(/^\d{4}_/);
+    expect(new Set(files.map((f) => f.slice(0, 4))).size).toBe(files.length);
+  });
+});

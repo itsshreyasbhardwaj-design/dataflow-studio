@@ -60,27 +60,10 @@ jobs:
           fetch-depth: 0
 
       - name: Scan the working tree for committed credentials
-        run: |
-          # A deliberately narrow scan: real credential shapes, not every string
-          # that happens to contain the word "key".
-          set +e
-          MATCHES=$(grep -rInE \
-            -e '(sk-[A-Za-z0-9_-]{20,})' \
-            -e '(gh[pousr]_[A-Za-z0-9]{30,})' \
-            -e '(AKIA[0-9A-Z]{16})' \
-            -e '(xox[abprs]-[A-Za-z0-9-]{20,})' \
-            -e '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' \
-            -e '(postgres|postgresql|mysql)://[^:/@\s]+:[^@\s]{8,}@' \
-            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist \
-            --exclude-dir=.next --exclude=pnpm-lock.yaml \
-            . )
-          set -e
-          if [ -n "$MATCHES" ]; then
-            echo "Possible credentials committed to the repository:"
-            echo "$MATCHES"
-            exit 1
-          fi
-          echo "No credential patterns found."
+        # The same script contributors run locally via `pnpm run secret-scan`,
+        # so its allowlist of published example values stays reviewable in the
+        # repository rather than buried in this workflow.
+        run: ./scripts/secret-scan.sh
 
   codeql:
     name: CodeQL
