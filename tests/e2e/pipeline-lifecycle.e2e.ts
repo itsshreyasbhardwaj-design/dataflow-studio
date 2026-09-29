@@ -21,9 +21,8 @@ test.describe("pipeline lifecycle", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-    // The demo run really executed, so the counters are non-zero.
-    const succeeded = page.locator("text=SUCCEEDED").locator("xpath=..");
-    await expect(succeeded).toContainText(/[1-9]/);
+    // The demo run really executed, so the "Succeeded" stat card is non-zero.
+    await expect(page.getByRole("link", { name: /Succeeded/ })).toContainText(/[1-9]/);
     await expect(page.getByText("Demo data only")).toBeVisible();
   });
 
@@ -105,9 +104,9 @@ test.describe("pipeline lifecycle", () => {
 
     await page.getByRole("link", { name: "demo_customer_revenue" }).click();
     await expect(page.getByRole("heading", { name: "demo_customer_revenue" })).toBeVisible();
-    await expect(page.getByText("Schema")).toBeVisible();
-    await expect(page.getByText("customer_id")).toBeVisible();
-    await expect(page.getByText("Lineage")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Schema", exact: true })).toBeVisible();
+    await expect(page.getByText("customer_id").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Lineage", exact: true })).toBeVisible();
 
     await page.goto("/lineage");
     await expect(page.locator(".react-flow__node").first()).toBeVisible({ timeout: 20_000 });
@@ -143,7 +142,7 @@ test.describe("pipeline lifecycle", () => {
     await expect(page.getByText(/blocked by a quality gate/)).toBeVisible();
 
     await page.getByRole("tab", { name: /Tasks/ }).click();
-    await expect(page.getByText("BLOCKED")).toBeVisible();
+    await expect(page.getByText("BLOCKED", { exact: true }).first()).toBeVisible();
 
     // The incident detector opened an incident with evidence.
     await page.goto("/incidents");
@@ -162,10 +161,13 @@ test.describe("pipeline lifecycle", () => {
   });
 
   test("secrets are write-only from the interface", async ({ page }) => {
-    await page.request.post("/api/v1/secrets", { data: { name: "e2e-secret", value: "never-shown-value" } });
+    const created = await page.request.post("/api/v1/secrets", {
+      data: { name: "e2e-secret", value: "never-shown-value" },
+    });
+    expect(created.ok(), await created.text()).toBeTruthy();
     await page.goto("/connectors");
 
-    await expect(page.getByText("e2e-secret")).toBeVisible();
+    await expect(page.getByText("e2e-secret").first()).toBeVisible();
     // The value appears nowhere in the rendered page.
     expect(await page.content()).not.toContain("never-shown-value");
   });
@@ -183,7 +185,11 @@ test.describe("pipeline lifecycle", () => {
       ["Connectors", /\/connectors/],
       ["Settings", /\/settings/],
     ] as const) {
-      await page.getByRole("link", { name: label, exact: true }).click();
+      // Scope to the sidebar: dashboard stat cards are links with the same names,
+      // and nav links may carry a count badge.
+      await page.getByRole("navigation", { name: "Main" })
+        .getByRole("link", { name: new RegExp(`^${label}`) })
+        .click();
       await expect(page).toHaveURL(pattern);
     }
 

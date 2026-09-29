@@ -30,7 +30,7 @@ export default defineConfig({
   webServer: process.env["E2E_BASE_URL"]
     ? undefined
     : {
-        command: `pnpm --filter @dataflow-studio/web run start -- -p ${PORT}`,
+        command: "pnpm --filter @dataflow-studio/web run start",
         url: `${baseURL}/api/v1/health`,
         reuseExistingServer: !process.env["CI"],
         timeout: 180_000,
@@ -39,6 +39,9 @@ export default defineConfig({
           AUTH_MODE: "local",
           LOG_LEVEL: "warn",
           PORT: String(PORT),
+          // A fixed development key, so the managed secret provider is available
+          // and the "secrets are write-only" assertion exercises the real path.
+          ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
         },
       },
 });
