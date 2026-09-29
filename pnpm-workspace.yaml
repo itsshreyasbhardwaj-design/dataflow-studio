@@ -1,6 +1,12 @@
 packages:
   - "apps/*"
   - "packages/*"
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+
+# pnpm 11 fails an install when a dependency wants to run a build script that is
+# neither approved nor explicitly declined. esbuild (pulled in by Vitest and
+# Next) ships prebuilt platform packages, so its postinstall is unnecessary -
+# the test suite and the production build both pass without it.
+allowBuilds:
+  esbuild: false
+  sharp: true
+  "@tailwindcss/oxide": true
