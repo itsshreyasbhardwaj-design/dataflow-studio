@@ -30,7 +30,19 @@ describe("loadMasterKey", () => {
     expect(loadMasterKey(MASTER.toString("hex")).length).toBe(32);
   });
   it("rejects a missing key", () => {
-    expect(() => loadMasterKey(undefined)).toThrow(EncryptionKeyError);
+    // loadMasterKey falls back to process.env.ENCRYPTION_KEY when the argument is
+    // undefined, so the "missing" case has to be asserted with that variable
+    // genuinely absent - otherwise the assertion passes or fails depending on
+    // whoever exported a key into the shell or the CI job.
+    const previous = process.env.ENCRYPTION_KEY;
+    delete process.env.ENCRYPTION_KEY;
+    try {
+      expect(() => loadMasterKey(undefined)).toThrow(EncryptionKeyError);
+      expect(() => loadMasterKey("")).toThrow(EncryptionKeyError);
+    } finally {
+      if (previous === undefined) delete process.env.ENCRYPTION_KEY;
+      else process.env.ENCRYPTION_KEY = previous;
+    }
   });
   it("rejects a short key rather than padding it", () => {
     expect(() => loadMasterKey(Buffer.alloc(16).toString("base64"))).toThrow(/32 bytes/);

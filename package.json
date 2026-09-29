@@ -9,8 +9,8 @@
     "node": ">=20.11"
   },
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/*\" run build && pnpm --filter @dataflow-studio/cli run build && pnpm --filter @dataflow-studio/worker run build && pnpm --filter @dataflow-studio/web run build",
-    "build:packages": "pnpm -r --filter \"./packages/*\" run build",
+    "build": "pnpm run build:packages && pnpm --filter @dataflow-studio/cli run build && pnpm --filter @dataflow-studio/web run build",
+    "build:packages": "pnpm -r --filter \"./packages/*\" run build && pnpm --filter @dataflow-studio/api run build && pnpm --filter @dataflow-studio/worker run build",
     "typecheck": "tsc -b tsconfig.build.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -20,7 +20,7 @@
     "dev": "pnpm --filter @dataflow-studio/web run dev",
     "worker": "pnpm --filter @dataflow-studio/worker run dev",
     "seed": "node --experimental-strip-types scripts/seed.ts",
-    "clean": "rm -rf node_modules packages/*/dist apps/*/dist apps/web/.next && pnpm store prune || true"
+    "clean": "rm -rf node_modules packages/*/dist apps/*/dist apps/web/.next && find . -name \"*.tsbuildinfo\" -not -path \"./node_modules/*\" -delete && pnpm store prune || true"
   },
   "devDependencies": {
     "@dataflow-studio/api": "workspace:*",

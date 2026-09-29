@@ -24,7 +24,7 @@ pnpm seed -- --runs 5     # several runs, so the charts have shape
 | `pnpm dev` | Web app with an embedded worker |
 | `pnpm worker` | Standalone worker (needs `DATABASE_URL`) |
 | `pnpm build` | Build every package and the app |
-| `pnpm build:packages` | Build packages only — run this after changing one |
+| `pnpm build:packages` | Build the libraries the app imports (`packages/*`, `apps/api`, `apps/worker`) |
 | `pnpm typecheck` | Project-wide `tsc -b` |
 | `pnpm lint` / `pnpm lint:fix` | ESLint |
 | `pnpm test` | Unit and integration tests |
@@ -32,8 +32,9 @@ pnpm seed -- --runs 5     # several runs, so the charts have shape
 | `pnpm test:e2e` | Playwright against a production build |
 
 Tests import package **sources** through Vitest aliases, so there is no build
-step between editing and running them. The app imports built output, which is why
-`build:packages` matters after a package change.
+step between editing and running them. The app imports built output — the workspace packages plus
+`apps/api` and `apps/worker` — which is why `build:packages` matters after
+changing any of them.
 
 ## Layout
 
