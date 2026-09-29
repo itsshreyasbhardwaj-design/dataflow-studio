@@ -1,0 +1,73 @@
+{
+  "name": "daily-sales",
+  "version": 1,
+  "description": "Aggregate raw sales into per-customer revenue, gate on quality, publish a managed dataset. Runs with no external systems.",
+  "nodes": [
+    {
+      "id": "generate_sales",
+      "type": "generator.source",
+      "config": { "preset": "sales", "rowCount": 2000, "seed": 7, "nullRate": 0.01, "dataset": "raw_sales" },
+      "metadata": { "label": "Generate sales", "position": { "x": 0, "y": 0 } }
+    },
+    {
+      "id": "drop_null_customers",
+      "type": "filter.transform",
+      "config": {
+        "predicates": [{ "column": "customer_id", "op": "not_null" }],
+        "combine": "and",
+        "onEmpty": "fail",
+        "dataset": "clean_sales"
+      },
+      "metadata": { "label": "Drop rows without a customer", "position": { "x": 260, "y": 0 } }
+    },
+    {
+      "id": "revenue_by_customer",
+      "type": "sql.transform",
+      "config": {
+        "query": "SELECT customer_id,\n       COUNT(*) AS order_count,\n       COUNT(DISTINCT region) AS regions,\n       ROUND(SUM(amount), 2) AS revenue\nFROM input\nGROUP BY customer_id\nORDER BY revenue DESC",
+        "dataset": "customer_revenue"
+      },
+      "metadata": { "label": "Revenue by customer", "position": { "x": 520, "y": 0 } }
+    },
+    {
+      "id": "quality",
+      "type": "quality.check",
+      "config": {
+        "dataset": "customer_revenue",
+        "checks": [
+          { "id": "customer_id_not_null", "type": "not_null", "column": "customer_id" },
+          { "id": "customer_id_unique", "type": "unique", "column": "customer_id" },
+          { "id": "revenue_non_negative", "type": "range", "column": "revenue", "min": 0 },
+          { "id": "order_count_positive", "type": "range", "column": "order_count", "min": 1 },
+          { "id": "has_rows", "type": "row_count", "minRows": 1 }
+        ],
+        "onFailure": "warn"
+      },
+      "metadata": { "label": "Quality checks", "position": { "x": 780, "y": 0 } }
+    },
+    {
+      "id": "gate",
+      "type": "quality.gate",
+      "config": { "severity": "any_failure", "scope": "upstream" },
+      "metadata": { "label": "Quality gate", "position": { "x": 1040, "y": 0 } }
+    },
+    {
+      "id": "publish",
+      "type": "dataset.destination",
+      "config": { "dataset": "customer_revenue", "writeMode": "replace", "retainRows": 1000, "idempotent": true },
+      "metadata": { "label": "Publish dataset", "position": { "x": 1300, "y": 0 } }
+    }
+  ],
+  "edges": [
+    { "from": "generate_sales", "to": "drop_null_customers" },
+    { "from": "drop_null_customers", "to": "revenue_by_customer" },
+    { "from": "revenue_by_customer", "to": "quality" },
+    { "from": "quality", "to": "gate" },
+    { "from": "gate", "to": "publish" }
+  ],
+  "metadata": {
+    "tests": [
+      { "dataset": "customer_revenue", "minRows": 1, "notNull": ["customer_id"], "unique": ["customer_id"], "nonNegative": ["revenue"] }
+    ]
+  }
+}

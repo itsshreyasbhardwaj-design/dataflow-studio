@@ -1,0 +1,52 @@
+name: Bug report
+description: Something behaves differently from what it documents
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not paste credentials, connection strings or production data.
+        A run ID and the request ID from an error response are usually enough for
+        us to trace it.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+      placeholder: |
+        1. Published a pipeline with a quality gate
+        2. Ran it with data that fails the check
+        3. Expected the destination to be BLOCKED; it ran anyway
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v0.1.0 / 9edaca0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: store
+    attributes:
+      label: Store driver
+      options: ["in-memory (default)", "PostgreSQL"]
+    validations:
+      required: true
+
+  - type: textarea
+    id: definition
+    attributes:
+      label: Pipeline definition (redacted)
+      description: The smallest definition that reproduces it. Replace connection IDs and hostnames.
+      render: json
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines or error response
+      description: Logs are credential-redacted before they are written, but check before pasting.
+      render: shell

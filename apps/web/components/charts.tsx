@@ -38,9 +38,9 @@ export function RunVolumeChart({ data }: { data: RunSeriesPoint[] }) {
         <YAxis tick={AXIS} tickLine={false} axisLine={false} allowDecimals={false} />
         <Tooltip {...tooltipStyle} />
         <Legend wrapperStyle={{ fontSize: 11 }} />
-        <Bar dataKey="succeeded" stackId="runs" fill="var(--color-success)" name="Succeeded" radius={[2, 2, 0, 0]} />
-        <Bar dataKey="failed" stackId="runs" fill="var(--color-danger)" name="Failed" />
-        <Bar dataKey="cancelled" stackId="runs" fill="var(--color-border-strong)" name="Cancelled" />
+        <Bar dataKey="succeeded" stackId="runs" maxBarSize={44} fill="var(--color-success)" name="Succeeded" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="failed" stackId="runs" maxBarSize={44} fill="var(--color-danger)" name="Failed" />
+        <Bar dataKey="cancelled" stackId="runs" maxBarSize={44} fill="var(--color-border-strong)" name="Cancelled" />
       </BarChart>
     </ResponsiveContainer>
   );

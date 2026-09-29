@@ -1,0 +1,83 @@
+{
+  "name": "api-analytics",
+  "version": 1,
+  "description": "Page through an HTTP API, branch on whether anything came back, and export to object storage. Requires an allowlisted endpoint, a stored API token and an S3-compatible connection.",
+  "nodes": [
+    {
+      "id": "fetch_events",
+      "type": "http.source",
+      "config": {
+        "url": "https://api.example.com/v1/events",
+        "method": "GET",
+        "headers": { "Authorization": { "secretRef": "analytics-api-token" } },
+        "query": { "per_page": "500" },
+        "recordPath": "data",
+        "pagination": "cursor",
+        "cursorPath": "meta.next_cursor",
+        "maxPages": 20,
+        "timeoutSeconds": 60,
+        "dataset": "api_events"
+      },
+      "retry": { "maxAttempts": 4, "strategy": "exponential", "initialDelaySeconds": 5, "multiplier": 4, "maxDelaySeconds": 300 },
+      "metadata": { "label": "Fetch events", "position": { "x": 0, "y": 0 } }
+    },
+    {
+      "id": "has_data",
+      "type": "condition.branch",
+      "config": { "expression": "row_count_gt", "value": 0 },
+      "metadata": { "label": "Any events?", "position": { "x": 260, "y": 0 } }
+    },
+    {
+      "id": "daily_rollup",
+      "type": "sql.transform",
+      "config": {
+        "query": "SELECT DATE_TRUNC('day', occurred_at) AS day,\n       event_name,\n       COUNT(*) AS events,\n       COUNT(DISTINCT user_id) AS users\nFROM input\nGROUP BY DATE_TRUNC('day', occurred_at), event_name\nORDER BY day DESC, events DESC",
+        "dataset": "event_rollup"
+      },
+      "metadata": { "label": "Daily rollup", "position": { "x": 520, "y": -60 } }
+    },
+    {
+      "id": "quality",
+      "type": "quality.check",
+      "config": {
+        "dataset": "event_rollup",
+        "checks": [
+          { "id": "events_positive", "type": "range", "column": "events", "min": 1 },
+          { "id": "has_rows", "type": "row_count", "minRows": 1 }
+        ],
+        "onFailure": "warn"
+      },
+      "metadata": { "label": "Quality checks", "position": { "x": 800, "y": -60 } }
+    },
+    {
+      "id": "export",
+      "type": "s3.destination",
+      "config": {
+        "connectionId": "REPLACE_WITH_S3_CONNECTION_ID",
+        "key": "analytics/events/{{ run.date }}/rollup.csv",
+        "format": "csv",
+        "idempotent": true,
+        "dataset": "s3.event_rollup"
+      },
+      "metadata": { "label": "Export to bucket", "position": { "x": 1080, "y": -60 } }
+    },
+    {
+      "id": "notify_empty",
+      "type": "webhook.notify",
+      "config": {
+        "url": "https://hooks.example.com/dataflow",
+        "secret": { "secretRef": "webhook-signing-secret" },
+        "includeRowCounts": true,
+        "idempotent": true
+      },
+      "metadata": { "label": "Report empty window", "position": { "x": 520, "y": 120 } }
+    }
+  ],
+  "edges": [
+    { "from": "fetch_events", "to": "has_data" },
+    { "from": "has_data", "to": "daily_rollup", "port": "true" },
+    { "from": "has_data", "to": "notify_empty", "port": "false" },
+    { "from": "daily_rollup", "to": "quality" },
+    { "from": "quality", "to": "export" }
+  ]
+}

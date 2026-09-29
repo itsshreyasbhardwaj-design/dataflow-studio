@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # A fixed key so encrypted-secret tests exercise the real code path.
+  ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Unit and integration tests
+        run: pnpm run test
+
+      - name: Build application
+        run: pnpm --filter @dataflow-studio/web run build
+
+  postgres:
+    name: Store conformance against PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dataflow
+          POSTGRES_PASSWORD: dataflow
+          POSTGRES_DB: dataflow_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U dataflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the PostgreSQL driver
+        # `pg` is an optional peer: deployments that never touch PostgreSQL do
+        # not ship it, so CI installs it explicitly to exercise that driver.
+        run: pnpm add -w -D pg @types/pg
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      - name: Run the store conformance suite against PostgreSQL
+        env:
+          TEST_DATABASE_URL: postgresql://dataflow:dataflow@localhost:5432/dataflow_test
+        run: pnpm vitest run packages/database
+
+      - name: Run the full suite with PostgreSQL available
+        env:
+          TEST_DATABASE_URL: postgresql://dataflow:dataflow@localhost:5432/dataflow_test
+        run: pnpm run test

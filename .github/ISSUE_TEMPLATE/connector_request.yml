@@ -1,0 +1,35 @@
+name: Connector request
+description: Ask for support for a data system
+labels: ["connector"]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System
+      placeholder: Snowflake, BigQuery, Kafka, MongoDB…
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: operations
+    attributes:
+      label: Operations needed
+      options:
+        - label: Read (source)
+        - label: Write (destination)
+        - label: Schema introspection
+        - label: Incremental reads
+
+  - type: textarea
+    id: auth
+    attributes:
+      label: Authentication
+      description: How the system authenticates (password, key pair, OAuth, IAM role). Do not include actual credentials.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything unusual
+      description: Pagination, rate limits, type quirks, transaction semantics.

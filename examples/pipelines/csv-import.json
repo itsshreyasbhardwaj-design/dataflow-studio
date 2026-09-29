@@ -1,0 +1,62 @@
+{
+  "name": "csv-import",
+  "version": 1,
+  "description": "Import an uploaded CSV, drop invalid rows, enforce the registered schema, and append to a staging table.",
+  "nodes": [
+    {
+      "id": "read_csv",
+      "type": "csv.source",
+      "config": {
+        "fileId": "REPLACE_WITH_UPLOADED_FILE_ID",
+        "delimiter": ",",
+        "hasHeader": true,
+        "inferTypes": true,
+        "nullValues": ["", "NULL", "null", "\\N"],
+        "limit": 500000,
+        "dataset": "csv_import"
+      },
+      "metadata": { "label": "Read CSV", "position": { "x": 0, "y": 0 } }
+    },
+    {
+      "id": "valid_rows",
+      "type": "filter.transform",
+      "config": {
+        "predicates": [
+          { "column": "id", "op": "not_null" },
+          { "column": "email", "op": "matches", "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$" }
+        ],
+        "combine": "and",
+        "onEmpty": "fail",
+        "dataset": "csv_valid"
+      },
+      "metadata": { "label": "Keep valid rows", "position": { "x": 260, "y": 0 } }
+    },
+    {
+      "id": "contract",
+      "type": "schema.validate",
+      "config": { "dataset": "csv_import", "onBreaking": "fail", "register": true },
+      "metadata": { "label": "Schema contract", "position": { "x": 520, "y": 0 } }
+    },
+    {
+      "id": "load",
+      "type": "postgres.destination",
+      "config": {
+        "connectionId": "REPLACE_WITH_CONNECTION_ID",
+        "table": "staging.csv_import",
+        "writeMode": "append",
+        "createTable": true,
+        "batchSize": 1000,
+        "dataset": "staging.csv_import"
+      },
+      "metadata": { "label": "Append to staging", "position": { "x": 780, "y": 0 } }
+    }
+  ],
+  "edges": [
+    { "from": "read_csv", "to": "valid_rows" },
+    { "from": "valid_rows", "to": "contract" },
+    { "from": "contract", "to": "load" }
+  ],
+  "metadata": {
+    "tests": [{ "dataset": "staging.csv_import", "minRows": 1, "notNull": ["id"] }]
+  }
+}

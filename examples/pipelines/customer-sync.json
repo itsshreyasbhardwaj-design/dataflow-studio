@@ -1,0 +1,95 @@
+{
+  "name": "customer-sync",
+  "version": 1,
+  "description": "Join orders to customers, validate the schema contract, and upsert into a warehouse table. Requires a PostgreSQL connection.",
+  "nodes": [
+    {
+      "id": "orders",
+      "type": "postgres.source",
+      "config": {
+        "connectionId": "REPLACE_WITH_CONNECTION_ID",
+        "mode": "query",
+        "query": "SELECT id AS order_id, customer_id, amount, status, created_at FROM public.orders WHERE created_at >= now() - interval '1 day'",
+        "limit": 200000,
+        "dataset": "orders_recent"
+      },
+      "metadata": { "label": "Recent orders", "position": { "x": 0, "y": 0 } }
+    },
+    {
+      "id": "customers",
+      "type": "postgres.source",
+      "config": {
+        "connectionId": "REPLACE_WITH_CONNECTION_ID",
+        "mode": "table",
+        "table": "public.customers",
+        "limit": 200000,
+        "dataset": "customers"
+      },
+      "metadata": { "label": "Customers", "position": { "x": 0, "y": 160 } }
+    },
+    {
+      "id": "enriched",
+      "type": "join.transform",
+      "config": {
+        "left": "orders",
+        "right": "customers",
+        "on": [{ "left": "customer_id", "right": "id" }],
+        "type": "left",
+        "rightPrefix": "customer_",
+        "dataset": "orders_enriched"
+      },
+      "metadata": { "label": "Join customers", "position": { "x": 280, "y": 80 } }
+    },
+    {
+      "id": "contract",
+      "type": "schema.validate",
+      "config": { "dataset": "orders_enriched", "onBreaking": "fail", "onWarning": "warn", "register": true },
+      "metadata": { "label": "Schema contract", "position": { "x": 560, "y": 80 } }
+    },
+    {
+      "id": "quality",
+      "type": "quality.check",
+      "config": {
+        "dataset": "orders_enriched",
+        "checks": [
+          { "id": "order_id_unique", "type": "unique", "column": "order_id" },
+          { "id": "status_allowed", "type": "accepted_values", "column": "status", "values": ["pending", "paid", "shipped", "refunded"] },
+          { "id": "amount_non_negative", "type": "range", "column": "amount", "min": 0 },
+          { "id": "fresh", "type": "freshness", "column": "created_at", "maxAgeSeconds": 172800 }
+        ],
+        "onFailure": "warn"
+      },
+      "metadata": { "label": "Quality checks", "position": { "x": 840, "y": 80 } }
+    },
+    {
+      "id": "gate",
+      "type": "quality.gate",
+      "config": { "severity": "error_only", "scope": "upstream" },
+      "metadata": { "label": "Quality gate", "position": { "x": 1120, "y": 80 } }
+    },
+    {
+      "id": "load",
+      "type": "postgres.destination",
+      "config": {
+        "connectionId": "REPLACE_WITH_CONNECTION_ID",
+        "table": "reporting.orders_enriched",
+        "writeMode": "upsert",
+        "keyColumns": ["order_id"],
+        "batchSize": 1000,
+        "idempotent": true,
+        "dataset": "reporting.orders_enriched"
+      },
+      "retry": { "maxAttempts": 3, "strategy": "exponential", "initialDelaySeconds": 10, "multiplier": 6, "maxDelaySeconds": 900 },
+      "timeoutSeconds": 900,
+      "metadata": { "label": "Upsert reporting table", "position": { "x": 1400, "y": 80 } }
+    }
+  ],
+  "edges": [
+    { "from": "orders", "to": "enriched" },
+    { "from": "customers", "to": "enriched" },
+    { "from": "enriched", "to": "contract" },
+    { "from": "contract", "to": "quality" },
+    { "from": "quality", "to": "gate" },
+    { "from": "gate", "to": "load" }
+  ]
+}
