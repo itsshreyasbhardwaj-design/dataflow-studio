@@ -1263,9 +1263,33 @@ function translate(error: unknown, conflictMessage?: string): Error {
 }
 
 /** Creates a store backed by `pg`, which is an optional dependency. */
+/** PostgreSQL type OID for `bigint` / `int8`. */
+const INT8_OID = 20;
+
+/**
+ * `pg` returns `bigint` columns as strings, because an int8 can exceed
+ * `Number.MAX_SAFE_INTEGER`. Every int8 in this schema is a counter - a run
+ * event sequence, a duration in milliseconds, a row count, a byte size - and all
+ * of them are declared `number` in {@link ./types.js}. Leaving them as strings
+ * makes `sequence > cursor` a lexicographic comparison, which silently breaks
+ * event-stream resumption around every power of ten.
+ *
+ * So int8 is parsed to a number, and a value that genuinely cannot be
+ * represented is left as a string rather than rounded: a wrong number is worse
+ * than a value whose type is visibly unexpected.
+ */
+export function parseInt8(value: string | null): number | string | null {
+  if (value === null) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : value;
+}
+
 export async function createPostgresStore(connectionString: string, options: { max?: number; ssl?: boolean } = {}): Promise<PostgresStore> {
   const specifier = "pg";
-  let pg: { Pool: new (config: Record<string, unknown>) => SqlPool };
+  let pg: {
+    Pool: new (config: Record<string, unknown>) => SqlPool;
+    types?: { getTypeParser(oid: number, format?: string): (value: string) => unknown };
+  };
   try {
     pg = (await import(specifier)) as never;
   } catch (error) {
@@ -1274,11 +1298,23 @@ export async function createPostgresStore(connectionString: string, options: { m
       { cause: error },
     );
   }
+
+  // Scoped to this pool rather than set through `pg.types.setTypeParser`, which
+  // would change parsing for every other consumer of `pg` in the process.
+  const defaultTypes = pg.types;
+  const types = {
+    getTypeParser(oid: number, format?: string) {
+      if (oid === INT8_OID) return parseInt8;
+      return defaultTypes?.getTypeParser(oid, format) ?? ((value: string) => value);
+    },
+  };
+
   const pool = new pg.Pool({
     connectionString,
     max: options.max ?? 10,
     ...(options.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
     application_name: "dataflow-studio",
+    types,
   });
   return new PostgresStore(pool);
 }

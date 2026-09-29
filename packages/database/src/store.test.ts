@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { newId } from "@dataflow-studio/observability";
 import { MemoryStore } from "./memory-store.js";
-import { createPostgresStore } from "./postgres-store.js";
+import { createPostgresStore, parseInt8 } from "./postgres-store.js";
 import type { Store } from "./store.js";
 import type { Pipeline, PipelineVersion, TaskRun, WorkflowRun } from "./types.js";
 
@@ -17,12 +17,49 @@ const drivers: Array<{ name: string; create: () => Promise<Store> }> = [
   { name: "memory", create: async () => new MemoryStore() },
 ];
 
+interface MinimalPgClient {
+  connect(): Promise<void>;
+  query(sql: string): Promise<unknown>;
+  end(): Promise<void>;
+}
+
+/** `pg` has no bundled types and no `@types/pg` here, so it is typed structurally. */
+async function pgClient(connectionString: string): Promise<MinimalPgClient> {
+  const specifier = "pg";
+  const pg = (await import(specifier)) as unknown as {
+    Client: new (config: { connectionString: string }) => MinimalPgClient;
+  };
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  return client;
+}
+
 const testDatabaseUrl = process.env["TEST_DATABASE_URL"];
+const testSchemas: string[] = [];
+
 if (testDatabaseUrl) {
   drivers.push({
     name: "postgres",
     create: async () => {
-      const store = await createPostgresStore(testDatabaseUrl);
+      // Every test gets its own schema. `create()` is contracted to return an
+      // empty store, and the in-memory driver satisfies that for free; against a
+      // shared database, leftover rows from earlier tests are visible to any
+      // query that is deliberately not tenant-scoped - `claimNextTask` is
+      // global, because a worker claims across tenants - so isolation has to be
+      // real rather than assumed. It also means every test re-runs the
+      // migrations, which is its own useful assertion.
+      const schema = `conformance_${newId("s").slice(-16).toLowerCase()}`;
+      const bootstrap = await pgClient(testDatabaseUrl);
+      try {
+        await bootstrap.query(`CREATE SCHEMA "${schema}"`);
+      } finally {
+        await bootstrap.end();
+      }
+      testSchemas.push(schema);
+
+      const url = new URL(testDatabaseUrl);
+      url.searchParams.set("options", `-c search_path=${schema}`);
+      const store = await createPostgresStore(url.toString());
       await store.migrate();
       return store;
     },
@@ -32,6 +69,13 @@ if (testDatabaseUrl) {
 const opened: Store[] = [];
 afterAll(async () => {
   for (const store of opened) await store.close?.();
+  if (!testDatabaseUrl || !testSchemas.length) return;
+  const client = await pgClient(testDatabaseUrl);
+  try {
+    for (const schema of testSchemas) await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+  } finally {
+    await client.end();
+  }
 });
 
 const definition = (name: string) => ({
@@ -557,5 +601,31 @@ describe("migration files", () => {
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) expect(file).toMatch(/^\d{4}_/);
     expect(new Set(files.map((f) => f.slice(0, 4))).size).toBe(files.length);
+  });
+});
+
+describe("parseInt8", () => {
+  it("returns a number for the counters this schema actually stores", () => {
+    // Run event sequences, durations in ms, row counts and byte sizes.
+    expect(parseInt8("0")).toBe(0);
+    expect(parseInt8("1")).toBe(1);
+    expect(parseInt8("42")).toBe(42);
+    expect(parseInt8("9007199254740991")).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it("passes NULL through", () => {
+    expect(parseInt8(null)).toBeNull();
+  });
+
+  it("keeps a value it cannot represent as a string rather than rounding it", () => {
+    // 2^53, the first integer a double cannot distinguish from its neighbour.
+    expect(parseInt8("9007199254740993")).toBe("9007199254740993");
+  });
+
+  it("makes sequence comparison numeric rather than lexicographic", () => {
+    // The bug this exists to prevent: as strings, "9" > "10".
+    const ninth = parseInt8("9") as number;
+    const tenth = parseInt8("10") as number;
+    expect(tenth).toBeGreaterThan(ninth);
   });
 });
