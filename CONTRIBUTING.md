@@ -24,7 +24,6 @@ docker run -d --name dataflow-pg -p 5432:5432 \
   -e POSTGRES_USER=dataflow -e POSTGRES_PASSWORD=dataflow -e POSTGRES_DB=dataflow \
   postgres:16-alpine
 export DATABASE_URL=postgresql://dataflow:dataflow@localhost:5432/dataflow
-pnpm add -w -D pg          # the driver is an optional peer
 pnpm dev                   # migrations run on first connect
 pnpm worker                # in another terminal - the embedded worker turns off
 ```

@@ -6,7 +6,7 @@ import { MemoryFileStore, MemorySqlDriver } from "./testing.js";
 import { DatasetConnector, FileConnector, GeneratorConnector, InlineConnector, type DatasetStore } from "./builtin.js";
 import { ConnectorRegistry } from "./registry.js";
 import { httpRequest, HttpConnector } from "./http.js";
-import { ConnectorError, NotSupportedError, type DataBatch } from "./types.js";
+import { ConnectorError, NotSupportedError, describeError, type DataBatch } from "./types.js";
 import { inferSchema, makeBatch, type ColumnSchema, type Row } from "@dataflow-studio/schema-registry";
 
 const batch = (rows: Row[]): DataBatch => makeBatch(rows, inferSchema(rows));
@@ -248,13 +248,16 @@ describe("SqlDatabaseConnector", () => {
     expect(driver.rowsIn("target")[0]!["meta"]).toBe('{"a":1}');
   });
 
-  it("reports a missing driver with an actionable message", async () => {
+  it("always explains why a connection test failed", async () => {
     const { PostgresDriver } = await import("./sql-database.js");
     const driver = new PostgresDriver();
-    const result = await new SqlDatabaseConnector(driver).testConnection({ host: "localhost" });
-    // Either the driver is genuinely absent (expected here) or a real connection is refused.
+    const result = await new SqlDatabaseConnector(driver).testConnection({ host: "localhost", port: 59999 });
     expect(result.ok).toBe(false);
-    expect(result.message).toMatch(/not installed|ECONNREFUSED|connect|password|does not exist/i);
+    // The reason varies with the environment - the driver may be absent, or
+    // present and unable to reach the port - but a blank message is never
+    // acceptable: it is the only thing the connection panel has to show.
+    expect(result.message.trim()).not.toBe("");
+    expect(result.message).toMatch(/not installed|ECONNREFUSED|ENOTFOUND|connect|timeout|password|does not exist/i);
   });
 });
 
@@ -543,5 +546,39 @@ describe("ConnectorRegistry", () => {
     const registry = new ConnectorRegistry({ organizationId: "o", sqlDrivers: { postgres: new MemorySqlDriver() } });
     await expect(registry.testConnection("postgres", { host: "x" })).resolves.toMatchObject({ ok: true });
     await expect(registry.testConnection("nope", {})).rejects.toThrow(/Unknown connector family/);
+  });
+});
+
+describe("describeError", () => {
+  it("passes through a plain message", () => {
+    expect(describeError(new Error("boom"))).toBe("boom");
+  });
+
+  it("unwraps an AggregateError whose own message is empty", () => {
+    // This is exactly the shape `pg` produces when every address for a host is
+    // unreachable, and the shape that used to surface as a blank reason.
+    const aggregate = new AggregateError([new Error("connect ECONNREFUSED ::1:5432"), new Error("connect ECONNREFUSED 127.0.0.1:5432")], "");
+    const described = describeError(aggregate);
+    expect(described).toContain("ECONNREFUSED ::1:5432");
+    expect(described).toContain("ECONNREFUSED 127.0.0.1:5432");
+  });
+
+  it("collapses duplicate nested messages", () => {
+    const aggregate = new AggregateError([new Error("same"), new Error("same")], "");
+    expect(describeError(aggregate)).toBe("AggregateError: same");
+  });
+
+  it("falls back to a code, then to the error name", () => {
+    const coded = Object.assign(new Error(""), { code: "ECONNRESET" });
+    expect(describeError(coded)).toBe("Error: ECONNRESET");
+    const named = new Error("");
+    named.name = "TimeoutError";
+    expect(describeError(named)).toBe("TimeoutError");
+  });
+
+  it("handles values that are not errors", () => {
+    expect(describeError("plain string")).toBe("plain string");
+    expect(describeError(undefined)).toBe("Unknown error");
+    expect(describeError(42)).toBe("42");
   });
 });

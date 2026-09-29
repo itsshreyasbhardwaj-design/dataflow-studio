@@ -4,11 +4,7 @@ import { extractPath, parseJsonRecords } from "./formats.js";
 import {
   assertUrlAllowed, DEFAULT_EGRESS_POLICY, sanitizeHeaders, type EgressPolicy,
 } from "./ssrf.js";
-import {
-  ConnectorError, NotSupportedError,
-  type ConnectionResult, type DataConnector, type DataSchemaDescriptor,
-  type ReadRequest, type WriteRequest, type WriteResult,
-} from "./types.js";
+import { ConnectorError, NotSupportedError, describeError, type ConnectionResult, type DataConnector, type DataSchemaDescriptor, type ReadRequest, type WriteRequest, type WriteResult } from "./types.js";
 
 export interface HttpRequestOptions {
   method?: string;
@@ -178,7 +174,7 @@ export class HttpConnector implements DataConnector {
         details: { status: response.status, contentType: response.headers["content-type"] ?? null },
       };
     } catch (error) {
-      return { ok: false, latencyMs: Date.now() - startedAt, message: (error as Error).message };
+      return { ok: false, latencyMs: Date.now() - startedAt, message: describeError(error) };
     }
   }
 

@@ -1,6 +1,6 @@
 import type { Connection } from "@dataflow-studio/database";
 import { ConnectorRegistry, type ConnectionResult } from "@dataflow-studio/connectors";
-import { newId } from "@dataflow-studio/observability";
+import { newId, redactString } from "@dataflow-studio/observability";
 import { resolveSecrets } from "@dataflow-studio/secrets";
 import { ApiError } from "../errors.js";
 import { audited, authorize, type ApiContext } from "../context.js";
@@ -133,7 +133,13 @@ export async function testConnection(context: ApiContext, connectionId: string):
   };
   const resolved = await resolveSecrets(config, { organizationId, provider: context.secrets });
 
-  const result = await registry.testConnection(connection.family, resolved.value as never).finally(() => registry.close());
+  const probed = await registry.testConnection(connection.family, resolved.value as never).finally(() => registry.close());
+
+  // A driver's own error text is outside our control - `pg` and the HTTP client
+  // both echo the target back, and a misconfigured host field can itself be a
+  // full connection string. Redacting here is what makes the promise above true
+  // for the stored message and the response alike.
+  const result: ConnectionResult = { ...probed, message: redactString(probed.message) };
   await context.store.updateConnection(organizationId, connectionId, {
     lastTestedAt: context.now.toISOString(),
     lastTestOk: result.ok,

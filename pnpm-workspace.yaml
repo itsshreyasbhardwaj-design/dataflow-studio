@@ -10,3 +10,10 @@ allowBuilds:
   esbuild: false
   sharp: true
   "@tailwindcss/oxide": true
+
+# next pins postcss to 8.4.31, which is behind four published advisories
+# (GHSA-fxqj-rqcc-2cmp and its predecessors). postcss is patch-compatible here -
+# it is only used to process the Tailwind stylesheet at build time - so the
+# override lifts the whole tree onto a fixed release.
+overrides:
+  postcss: "^8.5.28"

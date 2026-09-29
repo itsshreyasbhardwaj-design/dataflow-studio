@@ -3,11 +3,7 @@ import type { NodeConfig } from "@dataflow-studio/workflow-engine";
 import {
   assertReadOnlyQuery, columnDefinition, parseQualifiedName, quoteIdentifier, quoteQualified,
 } from "./identifiers.js";
-import {
-  ConnectorError,
-  type ConnectionResult, type DataConnector, type DataSchemaDescriptor,
-  type ReadRequest, type WriteRequest, type WriteResult,
-} from "./types.js";
+import { ConnectorError, describeError, type ConnectionResult, type DataConnector, type DataSchemaDescriptor, type ReadRequest, type WriteRequest, type WriteResult } from "./types.js";
 
 /**
  * Minimal driver surface. Both the real drivers and the in-memory test double
@@ -185,7 +181,7 @@ export class SqlDatabaseConnector implements DataConnector {
         message: `Connected to ${this.family}`,
       };
     } catch (error) {
-      return { ok: false, latencyMs: Date.now() - startedAt, message: (error as Error).message };
+      return { ok: false, latencyMs: Date.now() - startedAt, message: describeError(error) };
     } finally {
       await connection?.release().catch(() => undefined);
     }

@@ -64,12 +64,15 @@ examples/pipelines/
 
 ## Working against PostgreSQL
 
+`pg` is an optional peer dependency of `@dataflow-studio/database` and a
+dev dependency of this workspace, so `pnpm install` already provides it here.
+Production images install it themselves - see [self-hosting](./self-hosting.md).
+
 ```bash
 docker run -d --name dataflow-pg -p 5432:5432 \
   -e POSTGRES_USER=dataflow -e POSTGRES_PASSWORD=dataflow -e POSTGRES_DB=dataflow \
   postgres:16-alpine
 
-pnpm add -w -D pg
 export DATABASE_URL=postgresql://dataflow:dataflow@localhost:5432/dataflow
 pnpm dev      # migrations run on connect; the embedded worker turns itself off
 pnpm worker   # in another terminal

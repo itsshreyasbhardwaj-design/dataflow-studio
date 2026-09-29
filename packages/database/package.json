@@ -24,5 +24,13 @@
     "@dataflow-studio/observability": "workspace:*",
     "@dataflow-studio/schema-registry": "workspace:*",
     "@dataflow-studio/secrets": "workspace:*"
+  },
+  "peerDependencies": {
+    "pg": "^8.11.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    }
   }
 }

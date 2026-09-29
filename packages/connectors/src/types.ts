@@ -75,6 +75,33 @@ export class NotSupportedError extends ConnectorError {
   }
 }
 
+/**
+ * Turns a thrown value into a message a user can act on.
+ *
+ * `error.message` is not enough on its own. Node raises an `AggregateError` with
+ * an empty message when every address for a host fails - a `pg` connection to an
+ * unreachable `localhost` produces exactly that - so a bare `.message` leaves the
+ * reason blank in the one place it matters most: the connection-test panel. This
+ * unwraps aggregate errors, falls back to the error name, and finally to the
+ * stringified value, so the result is never empty.
+ */
+export function describeError(error: unknown): string {
+  if (typeof error === "string" && error.trim()) return error;
+  if (!(error instanceof Error)) return String(error ?? "Unknown error");
+
+  if (error.message.trim()) return error.message;
+
+  const nested = (error as { errors?: unknown }).errors;
+  if (Array.isArray(nested) && nested.length) {
+    const parts = [...new Set(nested.map((inner) => describeError(inner)))];
+    if (parts.length) return `${error.name || "AggregateError"}: ${parts.join("; ")}`;
+  }
+
+  const code = (error as { code?: unknown }).code;
+  if (typeof code === "string" && code) return `${error.name || "Error"}: ${code}`;
+  return error.name || "Unknown error";
+}
+
 /** Storage for uploaded files, so file connectors do not touch the filesystem directly. */
 export interface FileStore {
   readFile(organizationId: string, fileId: string): Promise<{ content: Buffer; filename: string; contentType?: string }>;

@@ -75,12 +75,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install the PostgreSQL driver
-        # `pg` is an optional peer: deployments that never touch PostgreSQL do
-        # not ship it, so CI installs it explicitly to exercise that driver.
-        # --no-frozen-lockfile because this deliberately adds a dependency.
-        run: pnpm add -w -D --no-frozen-lockfile pg @types/pg
-
       - name: Build packages
         run: pnpm run build:packages
 

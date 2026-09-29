@@ -3,11 +3,7 @@ import type { NodeConfig } from "@dataflow-studio/workflow-engine";
 import { parseCsv, parseJsonRecords, writeCsv, writeJson } from "./formats.js";
 import { signRequest } from "./sigv4.js";
 import { assertUrlAllowed, type EgressPolicy } from "./ssrf.js";
-import {
-  ConnectorError,
-  type ConnectionResult, type DataConnector, type DataSchemaDescriptor,
-  type ReadRequest, type WriteRequest, type WriteResult,
-} from "./types.js";
+import { ConnectorError, describeError, type ConnectionResult, type DataConnector, type DataSchemaDescriptor, type ReadRequest, type WriteRequest, type WriteResult } from "./types.js";
 
 export interface S3Settings {
   endpoint: string;
@@ -116,7 +112,7 @@ export class S3Connector implements DataConnector {
       await this.send(settings, "HEAD", "", undefined, signal);
       return { ok: true, latencyMs: Date.now() - startedAt, message: `Bucket "${settings.bucket}" is reachable` };
     } catch (error) {
-      return { ok: false, latencyMs: Date.now() - startedAt, message: (error as Error).message };
+      return { ok: false, latencyMs: Date.now() - startedAt, message: describeError(error) };
     }
   }
 

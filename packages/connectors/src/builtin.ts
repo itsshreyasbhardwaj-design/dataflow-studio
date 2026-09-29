@@ -4,11 +4,7 @@ import {
 import type { NodeConfig } from "@dataflow-studio/workflow-engine";
 import { parseCsv, parseJsonRecords, writeCsv, writeJson } from "./formats.js";
 import { generateRows, type GeneratorPreset } from "./generator.js";
-import {
-  ConnectorError, NotSupportedError,
-  type ConnectionResult, type DataConnector, type DataSchemaDescriptor, type FileStore,
-  type ReadRequest, type WriteRequest, type WriteResult,
-} from "./types.js";
+import { ConnectorError, NotSupportedError, describeError, type ConnectionResult, type DataConnector, type DataSchemaDescriptor, type FileStore, type ReadRequest, type WriteRequest, type WriteResult } from "./types.js";
 
 /** Rows defined inline in the workflow. Used by examples and tests. */
 export class InlineConnector implements DataConnector {
@@ -158,7 +154,7 @@ export class FileConnector implements DataConnector {
       const { filename, content } = await this.store.readFile(this.organizationId, String(config["fileId"] ?? ""));
       return { ok: true, latencyMs: Date.now() - startedAt, message: `Read ${filename} (${content.byteLength} bytes)` };
     } catch (error) {
-      return { ok: false, latencyMs: Date.now() - startedAt, message: (error as Error).message };
+      return { ok: false, latencyMs: Date.now() - startedAt, message: describeError(error) };
     }
   }
 
