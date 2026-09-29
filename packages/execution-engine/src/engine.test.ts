@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryStore, type Store, type TaskRun } from "@dataflow-studio/database";
+import { describe, expect, it } from "vitest";
+import { MemoryStore, type Store } from "@dataflow-studio/database";
 import { EnvironmentSecretProvider } from "@dataflow-studio/secrets";
 import { Logger, MemorySink, newId } from "@dataflow-studio/observability";
 import { PIPELINE_TEMPLATES, validateWorkflow, type WorkflowDefinition } from "@dataflow-studio/workflow-engine";
@@ -531,15 +531,15 @@ describe("cancellation", () => {
   it("cancels a single task and skips its dependents", async () => {
     const { store, engine } = await setup();
     const { pipelineId, versionId } = await publish(store, demoDefinition);
-    const run = await engine.startRun({
+    const started = await engine.startRun({
       organizationId: ORG, pipelineId, pipelineName: demoDefinition.name, pipelineVersionId: versionId,
       version: 1, definition: demoDefinition, trigger: "manual", triggeredBy: "u",
     });
-    const task = (await store.listTasks(ORG, run.id)).find((t) => t.nodeId === "generate_sales")!;
+    const task = (await store.listTasks(ORG, started.id)).find((t) => t.nodeId === "generate_sales")!;
     await engine.cancelTask(ORG, task.id, "user_1");
-    const finished = await store.getRun(ORG, run.id);
+    const finished = await store.getRun(ORG, started.id);
     expect(finished?.state).toBe("FAILED");
-    const tasks = await store.listTasks(ORG, run.id);
+    const tasks = await store.listTasks(ORG, started.id);
     expect(tasks.find((t) => t.nodeId === "generate_sales")?.state).toBe("CANCELLED");
     expect(tasks.filter((t) => t.state === "SKIPPED")).toHaveLength(5);
   });
@@ -570,7 +570,7 @@ describe("timeouts and recovery", () => {
   it("recovers a task whose worker died", async () => {
     const { store, engine } = await setup();
     const { pipelineId, versionId } = await publish(store, demoDefinition);
-    const run = await engine.startRun({
+    await engine.startRun({
       organizationId: ORG, pipelineId, pipelineName: demoDefinition.name, pipelineVersionId: versionId,
       version: 1, definition: demoDefinition, trigger: "manual", triggeredBy: "u",
     });

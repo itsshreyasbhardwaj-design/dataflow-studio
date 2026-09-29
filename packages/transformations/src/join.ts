@@ -1,5 +1,4 @@
 import { inferSchema, makeBatch, type DataBatch, type Row } from "@dataflow-studio/schema-registry";
-import { compareValues } from "./sql/evaluate.js";
 import { TransformConfigError } from "./filter.js";
 
 export type JoinKind = "inner" | "left" | "right" | "full";

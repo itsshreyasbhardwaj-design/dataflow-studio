@@ -7,7 +7,7 @@ import { Logger, MemorySink, metrics, newId, newWorkerId, rootLogger } from "@da
 import { SchemaRegistry, makeBatch, type DataBatch } from "@dataflow-studio/schema-registry";
 import { resolveSecrets, type SecretProvider } from "@dataflow-studio/secrets";
 import {
-  applyDefaults, buildIndex, classifyError, getNodeType, planRetry, resolveRetryPolicy,
+  applyDefaults, buildIndex, classifyError, getNodeType, planRetry,
   type JsonObject, type NodeConfig, type RunState, type TaskState, type WorkflowDefinition, type WorkflowNode,
 } from "@dataflow-studio/workflow-engine";
 import { TaskFailure, type TaskContext, type TaskResult } from "./context.js";

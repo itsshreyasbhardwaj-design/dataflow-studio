@@ -203,7 +203,6 @@ describe("SqlDatabaseConnector", () => {
   it("rolls back a partially applied write", async () => {
     const driver = new MemorySqlDriver({ tables: { target: [{ id: 0 }] } });
     driver.failNextQueries = 0;
-    const connector = new SqlDatabaseConnector(driver);
     // Fail on the second INSERT of two batches.
     const original = driver.rowsIn("target").length;
     driver.failNextQueries = 0;

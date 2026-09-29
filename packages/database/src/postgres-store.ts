@@ -81,7 +81,6 @@ const BACKFILL_TO_DB: Record<string, string> = { from: "range_from", to: "range_
 const BACKFILL_FROM_DB: Record<string, string> = { range_from: "from", range_to: "to" };
 const QUALITY_TO_DB: Record<string, string> = { column: "column_name" };
 const QUALITY_FROM_DB: Record<string, string> = { column_name: "column" };
-const LOG_TO_DB: Record<string, string> = { timestamp: "ts" };
 const LOG_FROM_DB: Record<string, string> = { ts: "timestamp" };
 
 /**

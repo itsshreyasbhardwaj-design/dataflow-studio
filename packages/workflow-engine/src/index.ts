@@ -5,5 +5,6 @@ export * from "./node-types.js";
 export * from "./validate.js";
 export * from "./diff.js";
 export * from "./serialize.js";
+export * from "./sha256.js";
 export * from "./retry.js";
 export * from "./templates.js";

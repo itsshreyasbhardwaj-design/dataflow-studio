@@ -36,12 +36,9 @@ export class MemorySqlDriver implements SqlDriver {
   }
 
   async connect(_config: NodeConfig, _signal?: AbortSignal): Promise<SqlDriverConnection> {
-    const driver = this;
     return {
-      async query(sql: string, params?: readonly unknown[]) {
-        return driver.execute(sql, params ?? []);
-      },
-      async release() { /* nothing to release */ },
+      query: async (sql: string, params?: readonly unknown[]) => this.execute(sql, params ?? []),
+      release: async () => { /* nothing to release */ },
     };
   }
 

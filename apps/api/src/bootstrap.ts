@@ -21,7 +21,20 @@ export interface Runtime {
   handler: (request: Request) => Promise<Response>;
 }
 
-let runtime: Promise<Runtime> | null = null;
+/**
+ * The runtime is cached on `globalThis`, not in a module-level variable.
+ *
+ * Bundlers (Next.js among them) can instantiate the same module more than once -
+ * once for the server-component graph and once for route handlers. With a
+ * module-level cache that produces two independent stores, so a run created
+ * through the API would be invisible to the page rendering it. A global key is
+ * the only place both instances can meet.
+ */
+const RUNTIME_KEY = Symbol.for("dataflow-studio.runtime");
+
+interface GlobalWithRuntime {
+  [RUNTIME_KEY]?: Promise<Runtime>;
+}
 
 export interface BootstrapOptions {
   resolveClerkClaims?: (request: Request) => Promise<ClerkClaims | null>;
@@ -34,8 +47,9 @@ export interface BootstrapOptions {
  * and, in in-memory mode, a single dataset.
  */
 export async function getRuntime(options: BootstrapOptions = {}): Promise<Runtime> {
-  runtime ??= build(options);
-  return runtime;
+  const container = globalThis as unknown as GlobalWithRuntime;
+  container[RUNTIME_KEY] ??= build(options);
+  return container[RUNTIME_KEY];
 }
 
 async function build(options: BootstrapOptions): Promise<Runtime> {
@@ -77,5 +91,5 @@ async function build(options: BootstrapOptions): Promise<Runtime> {
 }
 
 export function resetRuntimeForTests(): void {
-  runtime = null;
+  delete (globalThis as unknown as GlobalWithRuntime)[RUNTIME_KEY];
 }

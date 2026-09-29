@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { newId } from "@dataflow-studio/observability";
 import { MemoryStore } from "./memory-store.js";
-import { createPostgresStore, type PostgresStore } from "./postgres-store.js";
+import { createPostgresStore } from "./postgres-store.js";
 import type { Store } from "./store.js";
 import type { Pipeline, PipelineVersion, TaskRun, WorkflowRun } from "./types.js";
 

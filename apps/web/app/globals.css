@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/*
+ * Developer-tool aesthetic: dense, high-contrast, monospace for anything a user
+ * might copy into a terminal. Dark is the default because that is where people
+ * watch pipelines at 02:00; light mode is a real theme, not an afterthought.
+ */
+@theme {
+  --color-canvas: oklch(0.16 0.008 264);
+  --color-surface: oklch(0.2 0.009 264);
+  --color-surface-raised: oklch(0.24 0.01 264);
+  --color-border: oklch(0.3 0.012 264);
+  --color-border-strong: oklch(0.4 0.014 264);
+  --color-text: oklch(0.95 0.005 264);
+  --color-text-muted: oklch(0.68 0.012 264);
+  --color-text-subtle: oklch(0.55 0.012 264);
+
+  --color-accent: oklch(0.7 0.16 240);
+  --color-accent-strong: oklch(0.62 0.18 240);
+  --color-success: oklch(0.72 0.17 152);
+  --color-warning: oklch(0.79 0.16 82);
+  --color-danger: oklch(0.66 0.2 22);
+  --color-info: oklch(0.72 0.13 220);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, monospace;
+
+  --radius-card: 6px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-canvas: oklch(0.985 0.002 264);
+  --color-surface: oklch(1 0 0);
+  --color-surface-raised: oklch(0.97 0.003 264);
+  --color-border: oklch(0.9 0.005 264);
+  --color-border-strong: oklch(0.82 0.008 264);
+  --color-text: oklch(0.22 0.01 264);
+  --color-text-muted: oklch(0.45 0.012 264);
+  --color-text-subtle: oklch(0.58 0.012 264);
+  --color-accent: oklch(0.52 0.18 250);
+  --color-accent-strong: oklch(0.45 0.2 250);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus is a first-class feature in a tool people live in. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--color-accent) 35%, transparent);
+}
+
+/* Scrollbars that do not shout. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+/* React Flow theming: the canvas has to feel like part of the app. */
+.react-flow__background {
+  background: var(--color-canvas);
+}
+.react-flow__edge-path {
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--color-accent);
+}
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: var(--color-border-strong);
+  border: 1px solid var(--color-canvas);
+}
+.react-flow__handle:hover {
+  background: var(--color-accent);
+}
+.react-flow__controls-button {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.react-flow__controls-button:hover {
+  background: var(--color-surface-raised);
+}
+.react-flow__minimap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+/* The minimap SVG defaults to a light fill, which is unreadable on a dark canvas. */
+.react-flow__minimap svg {
+  background: var(--color-surface);
+}
+.react-flow__minimap-mask {
+  fill: color-mix(in oklch, var(--color-canvas) 78%, transparent);
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+.react-flow__minimap-node {
+  fill: var(--color-border-strong);
+  stroke: none;
+}
+.react-flow__attribution {
+  display: none;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-accent) 60%, transparent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.running-pulse {
+  animation: pulse-ring 1.8s ease-out infinite;
+}

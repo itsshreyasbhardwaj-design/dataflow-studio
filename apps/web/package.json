@@ -1,0 +1,43 @@
+{
+  "name": "@dataflow-studio/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "clean": "rm -rf .next dist"
+  },
+  "dependencies": {
+    "@dataflow-studio/api": "workspace:*",
+    "@dataflow-studio/data-quality": "workspace:*",
+    "@dataflow-studio/database": "workspace:*",
+    "@dataflow-studio/execution-engine": "workspace:*",
+    "@dataflow-studio/lineage": "workspace:*",
+    "@dataflow-studio/observability": "workspace:*",
+    "@dataflow-studio/scheduler": "workspace:*",
+    "@dataflow-studio/schema-registry": "workspace:*",
+    "@dataflow-studio/secrets": "workspace:*",
+    "@dataflow-studio/transformations": "workspace:*",
+    "@dataflow-studio/workflow-engine": "workspace:*",
+    "@monaco-editor/react": "^4.7.0",
+    "@xyflow/react": "^12.8.6",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.548.0",
+    "monaco-editor": "^0.53.0",
+    "next": "^15.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^2.15.4",
+    "@dataflow-studio/worker": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
+  }
+}

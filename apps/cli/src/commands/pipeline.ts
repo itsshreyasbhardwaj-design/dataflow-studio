@@ -4,6 +4,12 @@ import { flagBoolean, flagList, flagNumber, flagString, parseParams } from "../a
 import { colorState, duration, json, print, printError, relativeTime, stateSymbol, style, table } from "../output.js";
 import type { CommandContext } from "./index.js";
 
+/** Strips colour codes so JSON output is machine-readable. */
+function stripAnsi(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/\u001B\[[0-9;]*m/g, "");
+}
+
 async function readDefinition(path: string): Promise<WorkflowDefinition> {
   const contents = await readFile(path, "utf8").catch(() => {
     throw new Error(`Cannot read "${path}"`);
@@ -283,7 +289,7 @@ export async function test(context: CommandContext): Promise<number> {
   }
 
   if (context.args.flags["json"]) {
-    json({ runId: run.id, state: finished.state, failures, report: report.map((r) => ({ ...r, result: r.result.replace(/\u001B\[[0-9;]*m/g, "") })) });
+    json({ runId: run.id, state: finished.state, failures, report: report.map((r) => ({ ...r, result: stripAnsi(r.result) })) });
     return failures ? 2 : 0;
   }
   print("");

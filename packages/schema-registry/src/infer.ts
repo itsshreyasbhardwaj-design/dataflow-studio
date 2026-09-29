@@ -7,7 +7,6 @@ const INTEGER = /^[+-]?\d{1,15}$/;
 const FLOAT = /^[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?$|^[+-]?\d+[eE][+-]?\d+$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:?\d{2})?$/;
-const BOOLEAN = /^(true|false|t|f|yes|no|y|n|0|1)$/i;
 
 /** Type of a single value, before reconciliation across rows. */
 export function inferValueType(value: unknown): DataType | "null" {

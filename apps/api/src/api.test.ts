@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MemoryStore, type Store } from "@dataflow-studio/database";
 import { ExecutionEngine } from "@dataflow-studio/execution-engine";
 import { Logger, MemorySink, newId } from "@dataflow-studio/observability";

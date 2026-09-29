@@ -409,7 +409,10 @@ function callScalarFunction(
       const keep = { year: 1, quarter: 2, month: 2, week: 3, day: 3, hour: 4, minute: 5, second: 6 }[unit];
       if (keep === undefined) throw new SqlEvaluationError(`Unsupported DATE_TRUNC unit "${unit}"`);
       const truncated = [parts[0]!, keep > 1 ? parts[1]! : 0, keep > 2 ? parts[2]! : 1, keep > 3 ? parts[3]! : 0, keep > 4 ? parts[4]! : 0, keep > 5 ? parts[5]! : 0];
-      if (unit === "quarter") truncated[1] = Math.floor(parts[1]! / 3) * 3, truncated[2] = 1;
+      if (unit === "quarter") {
+        truncated[1] = Math.floor(parts[1]! / 3) * 3;
+        truncated[2] = 1;
+      }
       const result = new Date(Date.UTC(truncated[0]!, truncated[1]!, truncated[2]!, truncated[3]!, truncated[4]!, truncated[5]!));
       if (unit === "week") result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7));
       return result.toISOString();

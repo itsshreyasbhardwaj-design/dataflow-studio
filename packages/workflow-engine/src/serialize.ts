@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "./sha256.js";
 import type { WorkflowDefinition, WorkflowEdge, WorkflowNode } from "./types.js";
 
 /**
@@ -48,7 +48,7 @@ export { stableStringify };
 
 /** Content hash of the executable definition, ignoring canvas positions. */
 export function definitionHash(workflow: WorkflowDefinition): string {
-  return createHash("sha256").update(canonicalize(workflow)).digest("hex").slice(0, 32);
+  return sha256Hex(canonicalize(workflow)).slice(0, 32);
 }
 
 export class WorkflowParseError extends Error {
@@ -63,6 +63,11 @@ export class WorkflowParseError extends Error {
 
 const MAX_DEFINITION_BYTES = 4 * 1024 * 1024;
 
+/** Byte length without depending on Node's Buffer, so this runs in the browser too. */
+function byteLength(input: string): number {
+  return typeof TextEncoder !== "undefined" ? new TextEncoder().encode(input).length : input.length;
+}
+
 /**
  * Parses untrusted JSON into a WorkflowDefinition. This is a hostile-input
  * boundary: the CLI, the API and CI all hand us files we did not write.
@@ -70,7 +75,7 @@ const MAX_DEFINITION_BYTES = 4 * 1024 * 1024;
 export function parseWorkflow(input: string | unknown): WorkflowDefinition {
   let raw: unknown = input;
   if (typeof input === "string") {
-    if (Buffer.byteLength(input, "utf8") > MAX_DEFINITION_BYTES) {
+    if (byteLength(input) > MAX_DEFINITION_BYTES) {
       throw new WorkflowParseError(
         `Workflow definition exceeds ${MAX_DEFINITION_BYTES} bytes`,
       );
