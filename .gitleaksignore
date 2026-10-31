@@ -1,0 +1,43 @@
+# gitleaks allowlist — audited exceptions only.
+#
+# Every fingerprint below was inspected during an account-wide security audit
+# and confirmed to be a deliberate test fixture, an example in documentation,
+# a redaction/secret-scanning test's own input, or vendored upstream code.
+# None is a live credential.
+#
+# This file lists FINGERPRINTS, not paths or rules, on purpose: a fingerprint
+# pins one specific finding at one location. A NEW secret added to any of the
+# same files still fails the scan. Do not replace these with path globs.
+#
+# If a finding here ever turns out to be real, delete its line rather than
+# editing it, so the scanner reports it again.
+
+# .github/workflows/ci.yml  [generic-api-key]
+.github/workflows/ci.yml:generic-api-key:15
+
+# .github/workflows/ci.yml  [generic-api-key]
+a66b9730530bb61c3949553358ad55ac6fd34ff3:.github/workflows/ci.yml:generic-api-key:15
+
+# .github/workflows/e2e.yml  [generic-api-key]
+.github/workflows/e2e.yml:generic-api-key:23
+
+# .github/workflows/e2e.yml  [generic-api-key]
+a66b9730530bb61c3949553358ad55ac6fd34ff3:.github/workflows/e2e.yml:generic-api-key:23
+
+# .github/workflows/security.yml  [generic-api-key]
+.github/workflows/security.yml:generic-api-key:22
+
+# .github/workflows/security.yml  [generic-api-key]
+a66b9730530bb61c3949553358ad55ac6fd34ff3:.github/workflows/security.yml:generic-api-key:22
+
+# README.md  [curl-auth-header]
+README.md:curl-auth-header:249
+
+# README.md  [curl-auth-header]
+a66b9730530bb61c3949553358ad55ac6fd34ff3:README.md:curl-auth-header:249
+
+# playwright.config.ts  [generic-api-key]
+playwright.config.ts:generic-api-key:44
+
+# playwright.config.ts  [generic-api-key]
+d0056850dfa64bab927058092eeb06f4f9e1320b:playwright.config.ts:generic-api-key:44
