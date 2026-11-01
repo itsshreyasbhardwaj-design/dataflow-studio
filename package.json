@@ -40,7 +40,7 @@
     "@dataflow-studio/workflow-engine": "workspace:*",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.56.1",
-    "@types/node": "^22.20.0",
+    "@types/node": "^26.6.6",
     "eslint": "^9.39.1",
     "pg": "^8.16.3",
     "typescript": "^5.9.3",
